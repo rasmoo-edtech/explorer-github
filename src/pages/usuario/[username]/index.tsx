@@ -1,16 +1,58 @@
 import Link from "next/link"
 import Image from "next/image"
+import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { GetServerSideProps, NextPage } from "next"
-import { GoLinkExternal, GoLocation, GoOrganization, GoPerson, GoRepo } from "react-icons/go"
+import { GoHeart, GoLinkExternal, GoLocation, GoOrganization, GoPerson, GoRepo } from "react-icons/go"
 
-import { User } from 'types/user'
+import { Layout } from "components/Layout"
+
 import github from "service/github"
 import styles from './styles.module.scss'
+import { User, UserLocal } from 'types/user'
 
 const UserPage: NextPage<User> = (user) => {
+  const { status } = useSession()
+  const [isLike, setIsLike] = useState<boolean>(false)
+  const [usersLike, setUsersLike] = useState<UserLocal[]>([])
+
+  const handleLikeUser = () => {
+    let updateUsersLike = [...usersLike]
+
+    if(isLike) {
+      updateUsersLike = updateUsersLike.filter(userLike => userLike.login !== user.login )
+    } else {
+      updateUsersLike.push({
+        login: user.login,
+        name: user.name,
+        avatar_url: user.avatar_url
+      })
+    }
+
+    setIsLike(currentState => !currentState)
+
+    setUsersLike(updateUsersLike)
+    localStorage.setItem('github-explorer-likes', JSON.stringify(updateUsersLike))
+  }
+
+  useEffect(() => {
+    const usersLikeLocal = localStorage.getItem('github-explorer-likes')
+
+    if(usersLikeLocal) {
+      const parseUsersLikeLocal: UserLocal[] = JSON.parse(usersLikeLocal)
+
+      setUsersLike(parseUsersLikeLocal)
+      setIsLike(parseUsersLikeLocal.findIndex(userLike => userLike.login === user.login) !== -1)
+    }
+  }, [])
+
   return (
-    <div className={styles.container}>
+    <Layout>
       <div className={styles.card}>
+        <button className={styles.like} type="button" onClick={handleLikeUser}>
+          <GoHeart className={isLike ? styles.active : ''} />
+        </button>
+
         <div className={styles.card__content}>
           <div className={styles.user__avatar}>
             <Image src={user.avatar_url} layout="fill" objectFit="cover" alt="Imagem de avatar do usuário" />
@@ -24,7 +66,7 @@ const UserPage: NextPage<User> = (user) => {
           </p>
         </div>
 
-        <footer className={styles.card__footer}>
+        <footer className={`${styles.card__footer} ${status === 'unauthenticated' ? styles.disable : ''}`}>
           <ul>
             {!!user.public_repos && (
               <li title="Número de repositorios">
@@ -55,7 +97,7 @@ const UserPage: NextPage<User> = (user) => {
           </div>
         </footer>
       </div>
-    </div>
+    </Layout>
   )
 }
 
