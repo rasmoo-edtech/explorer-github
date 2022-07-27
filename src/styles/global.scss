@@ -1,0 +1,34 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --background: #111121;
+  --background-light: #1D1D3B;
+  --background-dark: #16162c;
+
+  --text: #f5f6fa;
+  --text-dark: #afafb4;
+
+  --link: #b196e0;
+}
+
+body {
+  background: var(--background);
+}
+
+body, button, input {
+  color: var(--text);
+  font: 400 16px Helvitica, sans-serif;
+}
+
+button {
+  border: 0;
+  background: transparent;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
